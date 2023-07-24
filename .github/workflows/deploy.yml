@@ -51,7 +51,5 @@ jobs:
                npm run build
                pm2 restart api
             
+  chmod +x package.json
 
-
-# Replace "deploy.sh" with the actual name of the file you want to make executable
-          chmod +x app.js
