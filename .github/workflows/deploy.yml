@@ -49,4 +49,3 @@ jobs:
             pm2 restart api
             # Correct the file permissions (change permission as needed)
             chmod +x app.js
-aas sdf
