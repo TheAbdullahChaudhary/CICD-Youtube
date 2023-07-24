@@ -4,6 +4,7 @@ on:
   push:
     branches:
         - main
+  workfow_dispatch
 
 jobs:
   build:
