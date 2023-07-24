@@ -17,39 +17,35 @@ jobs:
       - name: Use node js
         uses: actions/setup-node@v1
         with:
-         node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - name: npm install and build
         run: |
           npm install
           npm run build
-
         env: 
           CI: true   
 
-
-  depoly:
+  deploy:
     needs: [build]
     runs-on: ubuntu-latest
 
     steps:
-     - name: SSH deploy
-       uses: appleboy/ssh-action@master
-       with:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@master
+        with:
           host: ${{ secrets.HOST }}
           username:  ${{ secrets.USER }}
           key:  ${{ secrets.KEY }}
           port:  ${{ secrets.PORT }}
           script: |
-              curl -o-   https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh    | bash
-              . ~/.nvm/nvm.sh
-
-               nvm instal 14
-               npm install -g pm2
-               cd ~/CICD
-               git pull origin main
-               npm install
-               npm run build
-               pm2 restart api
-            
- # Correct the file permissions (change permission as needed)
+            curl -o-   https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh    | bash
+            . ~/.nvm/nvm.sh
+            nvm install 14
+            npm install -g pm2
+            cd ~/CICD
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart api
+            # Correct the file permissions (change permission as needed)
             chmod +x app.js
