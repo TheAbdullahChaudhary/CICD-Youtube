@@ -1,58 +1,23 @@
-name: CICD for Youtube
+deploy:
+  needs: [build]
+  runs-on: ubuntu-latest
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-    # Add input parameters to manually trigger the workflow
-    inputs:
-      # Add an optional input for the node version
-      node-version:
-        description: 'Node.js version (e.g., 14.x)'
-        required: true
-        default: '14.x'
+  steps:
+    - name: SSH deploy
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.KEY }}
+        port: ${{ secrets.PORT }}
+        script: |
+          curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+          . ~/.nvm/nvm.sh
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [${{ github.event.inputs.node-version }}] # Use the input parameter for node version
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: npm install and build
-        run: |
+          nvm install ${{ github.event.inputs.node-version }} # Use the input parameter for node version
+          npm install -g pm2
+          cd ~/CICD
+          git pull origin main
           npm install
           npm run build
-        env:
-          CI: true
-
-  deploy:
-    needs: [build]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: SSH deploy
-        uses: appleboy/ssh-action@v1 # Updated to the latest version at the time of correction
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
-          script: |
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-            . ~/.nvm/nvm.sh
-
-            nvm install ${{ github.event.inputs.node-version }} # Use the input parameter for node version
-            npm install -g pm2
-            cd ~/CICD
-            git pull origin main
-            npm install
-            npm run build
-            pm2 restart api
+          pm2 restart api
