@@ -51,5 +51,4 @@ jobs:
                npm run build
                pm2 restart api
             
-  chmod +x package.json
-
+  chmod +x app.js
