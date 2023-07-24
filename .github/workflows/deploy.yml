@@ -3,50 +3,56 @@ name: CICD for Youtube
 on:
   push:
     branches:
-        - main
+      - main
+  workflow_dispatch:
+    # Add input parameters to manually trigger the workflow
+    inputs:
+      # Add an optional input for the node version
+      node-version:
+        description: 'Node.js version (e.g., 14.x)'
+        required: true
+        default: '14.x'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [${{ github.event.inputs.node-version }}] # Use the input parameter for node version
 
     steps:
       - uses: actions/checkout@v2
-      - name: Use node js
-        uses: actions/setup-node@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
         with:
-         node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - name: npm install and build
         run: |
           npm install
           npm run build
+        env:
+          CI: true
 
-        env: 
-          CI: true   
-
-
-  depoly:
+  deploy:
     needs: [build]
     runs-on: ubuntu-latest
 
     steps:
-     - name: SSH deploy
-       uses: appleboy/ssh-action@master
-       with:
+      - name: SSH deploy
+        uses: appleboy/ssh-action@v1 # Updated to the latest version at the time of correction
+        with:
           host: ${{ secrets.HOST }}
-          username:  ${{ secrets.USER }}
-          key:  ${{ secrets.KEY }}
-          port:  ${{ secrets.PORT }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
           script: |
-              curl -o-   https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh    | bash
-              . ~/.nvm/nvm.sh
+            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
+            . ~/.nvm/nvm.sh
 
-               nvm instal 14
-               npm install -g pm2
-               cd ~/CICD
-               git pull origin main
-               npm install
-               npm run build
-               pm2 restart api
+            nvm install ${{ github.event.inputs.node-version }} # Use the input parameter for node version
+            npm install -g pm2
+            cd ~/CICD
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart api
