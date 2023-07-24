@@ -3,8 +3,7 @@ name: CICD for Youtube
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+        - main
 
 jobs:
   build:
@@ -14,41 +13,40 @@ jobs:
         node-version: [14.x]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v2
+      - name: Use node js
+        uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install dependencies and build
+         node-version: ${{ matrix.node-version }}
+      - name: npm install and build
         run: |
           npm install
           npm run build
-        env:
-          CI: true
 
-  deploy:
+        env: 
+          CI: true   
+
+
+  depoly:
     needs: [build]
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH deploy
-        uses: appleboy/ssh-action@v1
-        with:
+     - name: SSH deploy
+       uses: appleboy/ssh-action@master
+       with:
           host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
+          username:  ${{ secrets.USER }}
+          key:  ${{ secrets.KEY }}
+          port:  ${{ secrets.PORT }}
           script: |
-            curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh | bash
-            . ~/.nvm/nvm.sh
+              curl -o-   https://raw.githubusercontent.com/creationix/nvm/v0.33.8/install.sh    | bash
+              . ~/.nvm/nvm.sh
 
-            nvm install 14
-            npm install -g pm2
-            cd ~/CICD
-            git pull origin main
-            npm install
-            npm run build
-            pm2 restart api
+               nvm instal 14
+               npm install -g pm2
+               cd ~/CICD
+               git pull origin main
+               npm install
+               npm run build
+               pm2 restart api
